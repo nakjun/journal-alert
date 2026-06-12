@@ -70,8 +70,8 @@ def write_markdown_from_excel(
         "method_family",
         "title",
         "authors",
-        "doi",
         "url",
+        "abstract",
     ]
     indexes = [HEADERS.index(header) for header in visible_headers]
 
@@ -150,4 +150,3 @@ def _format_sheet(ws: Worksheet) -> None:
 def _md_cell(value: object) -> str:
     text = str(value or "").replace("\n", " ").replace("|", "\\|").strip()
     return text
-
