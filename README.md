@@ -58,6 +58,7 @@ NCS 및 Nature 계열로는 아래 저널을 조사합니다.
 | Nature | `nature.com`, Nature 계열, npj 계열 |
 | IEEE | IEEE Xplore, IEEE DOI |
 | Elsevier | ScienceDirect, Elsevier DOI, Medical Image Analysis |
+| PubMed | DOI 기반 NCBI E-utilities fallback |
 | Generic | 표준 citation/meta description fallback |
 
 ## 폴더 구조

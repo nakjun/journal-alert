@@ -3,6 +3,7 @@ from __future__ import annotations
 import html
 import json
 import re
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from urllib.parse import quote, urlparse
 
@@ -41,6 +42,8 @@ def fetch_direct_abstract(url: str, doi: str = "", journal: str = "") -> Abstrac
         abstract = _parse_elsevier_abstract(text)
         if not abstract:
             abstract = _fetch_sciencedirect_abstract(final_url)
+        if not abstract:
+            abstract = _fetch_pubmed_abstract_by_doi(doi)
     else:
         abstract = _parse_generic_abstract(text)
 
@@ -138,6 +141,48 @@ def _fetch_sciencedirect_abstract(final_url: str) -> str:
     if not text:
         return ""
     return _parse_elsevier_abstract(text)
+
+
+def _fetch_pubmed_abstract_by_doi(doi: str) -> str:
+    doi = doi.strip()
+    if not doi:
+        return ""
+
+    try:
+        search_response = requests.get(
+            "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+            params={"db": "pubmed", "term": f"{doi}[doi]", "retmode": "json"},
+            headers=REQUEST_HEADERS,
+            timeout=30,
+        )
+        search_response.raise_for_status()
+        ids = search_response.json().get("esearchresult", {}).get("idlist", [])
+        if not ids:
+            return ""
+
+        fetch_response = requests.get(
+            "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi",
+            params={"db": "pubmed", "id": ids[0], "retmode": "xml"},
+            headers=REQUEST_HEADERS,
+            timeout=30,
+        )
+        fetch_response.raise_for_status()
+    except requests.RequestException:
+        return ""
+
+    try:
+        root = ET.fromstring(fetch_response.text)
+    except ET.ParseError:
+        return ""
+
+    parts: list[str] = []
+    for node in root.findall(".//Abstract/AbstractText"):
+        label = node.attrib.get("Label")
+        text = _clean_text(" ".join(node.itertext()))
+        if not text:
+            continue
+        parts.append(f"{label}: {text}" if label else text)
+    return " ".join(parts).strip()
 
 
 def _parse_generic_abstract(text: str) -> str:
