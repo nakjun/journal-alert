@@ -39,6 +39,7 @@ NCS 및 Nature 계열로는 아래 저널을 조사합니다.
 ## 주요 기능
 
 - Crossref API 기반 논문 검색
+- Crossref에 abstract가 없을 때 출판사 페이지 직접 파싱
 - 날짜 범위 지정 검색
 - 긴 기간 검색을 위한 Crossref cursor pagination 지원
 - 저널별 최대 확인 개수 지정
@@ -49,6 +50,15 @@ NCS 및 Nature 계열로는 아래 저널을 조사합니다.
 - Slack 알림 발송
 - 매일 오전 9시 실행용 로컬 스케줄러
 - Windows 작업 스케줄러 등록 가능
+
+직접 abstract 파싱은 출판사 타입별로 분리되어 있습니다.
+
+| 타입 | 대상 |
+| --- | --- |
+| Nature | `nature.com`, Nature 계열, npj 계열 |
+| IEEE | IEEE Xplore, IEEE DOI |
+| Elsevier | ScienceDirect, Elsevier DOI, Medical Image Analysis |
+| Generic | 표준 citation/meta description fallback |
 
 ## 폴더 구조
 
@@ -61,6 +71,7 @@ journal-alert/
 │  └─ paper_database.md
 ├─ src/
 │  └─ slack_paper_alert/
+│     ├─ abstract_fetchers.py
 │     ├─ cli.py
 │     ├─ config.py
 │     ├─ job.py
@@ -118,6 +129,18 @@ python run.py run-once --from-date 2026-05-01 --to-date 2026-06-12 --no-slack
 
 ```powershell
 python run.py run-once --from-date 2026-01-01 --to-date 2026-06-12 --max-rows-per-journal 5000 --no-slack
+```
+
+이미 저장된 논문 중 비어 있는 abstract를 출판사 페이지에서 직접 다시 가져옵니다.
+
+```powershell
+python run.py refresh-abstracts
+```
+
+이미 들어간 abstract도 더 긴 직접 파싱 결과가 있으면 갱신합니다.
+
+```powershell
+python run.py refresh-abstracts --force
 ```
 
 ## 매일 오전 9시 실행

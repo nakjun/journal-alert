@@ -7,6 +7,7 @@ from typing import Iterable
 
 import requests
 
+from .abstract_fetchers import fetch_direct_abstract
 from .config import JournalConfig
 from .models import Paper
 
@@ -168,10 +169,21 @@ def _work_to_paper(work: dict, journal_config: JournalConfig) -> Paper | None:
     title = _first(work.get("title"))
     abstract = _clean_abstract(work.get("abstract", ""))
     journal = _first(work.get("container-title")) or journal_config.name
+    doi = str(work.get("DOI", "")).strip()
+    url = str(work.get("URL", "")).strip()
     haystack = _normalize(" ".join([title, abstract, journal, " ".join(work.get("subject", []))]))
 
     modality = _match_terms(haystack, MODALITY_TERMS)
     method_family = _match_terms(haystack, METHOD_TERMS)
+    if _should_try_direct_abstract(haystack, abstract, modality, method_family):
+        direct_result = fetch_direct_abstract(url=url, doi=doi, journal=journal)
+        if direct_result:
+            abstract = direct_result.abstract
+            url = direct_result.final_url or url
+            haystack = _normalize(" ".join([title, abstract, journal, " ".join(work.get("subject", []))]))
+            modality = _match_terms(haystack, MODALITY_TERMS)
+            method_family = _match_terms(haystack, METHOD_TERMS)
+
     if not modality or not method_family:
         return None
 
@@ -183,12 +195,25 @@ def _work_to_paper(work: dict, journal_config: JournalConfig) -> Paper | None:
         method_family=method_family,
         title=title,
         authors=_authors(work.get("author", [])),
-        doi=str(work.get("DOI", "")).strip(),
-        url=str(work.get("URL", "")).strip(),
+        doi=doi,
+        url=url,
         abstract=abstract,
         source_api="Crossref",
         source_journal_config=journal_config.name,
     )
+
+
+def _should_try_direct_abstract(
+    haystack: str,
+    abstract: str,
+    modality: str | None,
+    method_family: str | None,
+) -> bool:
+    if abstract and modality and method_family:
+        return False
+    if modality or method_family:
+        return True
+    return _match_terms(haystack, MODALITY_TERMS) is not None or _match_terms(haystack, METHOD_TERMS) is not None
 
 
 def _match_terms(text: str, term_map: dict[str, tuple[str, ...]]) -> str | None:

@@ -6,6 +6,7 @@ from datetime import date
 from .config import DEFAULT_EXCEL_PATH, DEFAULT_MARKDOWN_PATH
 from .job import run_daily_job
 from .scheduler import serve
+from .store import refresh_missing_abstracts
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -26,6 +27,16 @@ def build_parser() -> argparse.ArgumentParser:
     serve_parser = subparsers.add_parser("serve", help="Run the daily 09:00 scheduler in the foreground.")
     serve_parser.add_argument("--hour", type=int, default=9)
     serve_parser.add_argument("--minute", type=int, default=0)
+
+    refresh_parser = subparsers.add_parser(
+        "refresh-abstracts",
+        help="Fetch missing abstracts directly from publisher pages and refresh Markdown.",
+    )
+    refresh_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Refresh existing abstracts too when the directly fetched version is longer.",
+    )
 
     return parser
 
@@ -49,6 +60,13 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "serve":
         serve(hour=args.hour, minute=args.minute)
+        return 0
+
+    if args.command == "refresh-abstracts":
+        updated_count = refresh_missing_abstracts(force=args.force)
+        print(f"Updated {updated_count} abstracts.")
+        print(f"Excel: {DEFAULT_EXCEL_PATH}")
+        print(f"Markdown: {DEFAULT_MARKDOWN_PATH}")
         return 0
 
     parser.error(f"Unknown command: {args.command}")

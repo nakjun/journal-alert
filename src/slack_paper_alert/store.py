@@ -5,6 +5,7 @@ from pathlib import Path
 from openpyxl import Workbook, load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
+from .abstract_fetchers import fetch_direct_abstract
 from .config import DEFAULT_EXCEL_PATH, DEFAULT_MARKDOWN_PATH
 from .models import Paper
 
@@ -88,6 +89,46 @@ def write_markdown_from_excel(
         lines.append("| " + " | ".join(values) + " |")
 
     markdown_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def refresh_missing_abstracts(
+    excel_path: Path = DEFAULT_EXCEL_PATH,
+    markdown_path: Path = DEFAULT_MARKDOWN_PATH,
+    force: bool = False,
+) -> int:
+    if not excel_path.exists():
+        return 0
+
+    wb = load_workbook(excel_path)
+    ws = wb["papers"]
+    header_row = [cell.value for cell in ws[1]]
+    indexes = {header: header_row.index(header) + 1 for header in HEADERS if header in header_row}
+    updated = 0
+
+    for row in range(2, ws.max_row + 1):
+        current = str(ws.cell(row=row, column=indexes["abstract"]).value or "").strip()
+        if current and not force:
+            continue
+
+        result = fetch_direct_abstract(
+            url=str(ws.cell(row=row, column=indexes["url"]).value or ""),
+            doi=str(ws.cell(row=row, column=indexes["doi"]).value or ""),
+            journal=str(ws.cell(row=row, column=indexes["journal"]).value or ""),
+        )
+        if not result:
+            continue
+        if current and len(result.abstract) <= len(current):
+            continue
+
+        ws.cell(row=row, column=indexes["abstract"]).value = result.abstract
+        ws.cell(row=row, column=indexes["url"]).value = result.final_url
+        updated += 1
+
+    if updated:
+        _format_sheet(ws)
+        wb.save(excel_path)
+    write_markdown_from_excel(excel_path, markdown_path)
+    return updated
 
 
 def _load_or_create_workbook(path: Path) -> tuple[Workbook, Worksheet]:
