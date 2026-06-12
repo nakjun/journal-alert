@@ -1,0 +1,71 @@
+# "NCS 본지 + 자매지"의 정확한 범위는 연구실 기준에 맞춰 조정할 수 있도록
+# 설정 파일로 분리했습니다. 기본값은 Nature Computational Science와
+# 의료영상/AI 논문이 자주 등장하는 Nature 계열 저널을 포함합니다.
+journals:
+  - id: nature_computational_science
+    name: Nature Computational Science
+    group: NCS and Nature family
+    issns:
+      - "2662-8457"
+    aliases:
+      - Nature Computational Science
+
+  - id: nature_machine_intelligence
+    name: Nature Machine Intelligence
+    group: NCS and Nature family
+    issns:
+      - "2522-5839"
+    aliases:
+      - Nature Machine Intelligence
+
+  - id: nature_medicine
+    name: Nature Medicine
+    group: NCS and Nature family
+    issns:
+      - "1078-8956"
+      - "1546-170X"
+    aliases:
+      - Nature Medicine
+
+  - id: nature_biomedical_engineering
+    name: Nature Biomedical Engineering
+    group: NCS and Nature family
+    issns:
+      - "2157-846X"
+    aliases:
+      - Nature Biomedical Engineering
+
+  - id: nature_communications
+    name: Nature Communications
+    group: NCS and Nature family
+    issns:
+      - "2041-1723"
+    aliases:
+      - Nature Communications
+
+  - id: npj_digital_medicine
+    name: npj Digital Medicine
+    group: NCS and Nature family
+    issns:
+      - "2398-6352"
+    aliases:
+      - npj Digital Medicine
+
+  - id: medical_image_analysis
+    name: Medical Image Analysis
+    group: Medical imaging journals
+    issns:
+      - "1361-8415"
+    aliases:
+      - Medical Image Analysis
+
+  - id: ieee_tmi
+    name: IEEE Transactions on Medical Imaging
+    group: Medical imaging journals
+    issns:
+      - "0278-0062"
+      - "1558-254X"
+    aliases:
+      - IEEE Transactions on Medical Imaging
+      - IEEE Trans Med Imaging
+

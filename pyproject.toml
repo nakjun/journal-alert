@@ -1,0 +1,23 @@
+[project]
+name = "slack-paper-alert"
+version = "0.1.0"
+description = "Daily paper searcher and Slack notifier for medical imaging AI papers."
+requires-python = ">=3.10"
+dependencies = [
+  "APScheduler>=3.10.4",
+  "openpyxl>=3.1.5",
+  "python-dotenv>=1.0.1",
+  "PyYAML>=6.0.2",
+  "requests>=2.32.3",
+]
+
+[project.scripts]
+slack-paper-alert = "slack_paper_alert.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
